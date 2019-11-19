@@ -1,17 +1,38 @@
 version: '3'
 services:
-  web:
-    build: .
-    ports:
-    - "4000:4000"
-    environment:
-      RDB_HOST: rethinkdb
-    links:
-    - rethinkdb
-    depends_on:
-    - rethinkdb
-    # restart: on-failure
-  rethinkdb:
-    image: rethinkdb:2.3.6
-    volumes:
-      - ./rethinkdb_data:/data
+    atx-web:
+        build: .
+        image: atx:atxserver2-web
+        container_name: atx-web
+        hostname: atx-web
+        ports:
+            - "4000:4000"
+        environment:
+            RDB_HOST: atx-rethinkdb
+        depends_on:
+            - atx-rethinkdb
+        networks:
+            - atx-net
+
+    atx-rethinkdb:
+        image: rethinkdb:2.3.6
+        container_name: atx-rethinkdb
+        hostname: atx-rethinkdb
+        volumes:
+            - "./rethinkdb_data:/data"
+        networks:
+            - atx-net
+
+    atx-android:
+        image: codeskyblue/atxserver2-android-provider
+        container_name: atx-android
+        hostname: atx-android
+        privileged: true
+        volumes:
+            - "/dev/bus/usb:/dev/bus/usb"
+        command: python main.py --server localhost:4000
+        network_mode: "host"
+
+networks:
+    atx-net:
+        driver: bridge
